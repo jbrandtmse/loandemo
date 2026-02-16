@@ -1,0 +1,7 @@
+{
+    "objectscript.conn": {
+        "server": "localhost-healthshare",
+        "ns": "HSCUSTOM",
+        "active": true
+    }
+}

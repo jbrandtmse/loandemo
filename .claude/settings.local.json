@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(bmad:bmm:workflows:generate-project-context)",
+      "Skill(bmad:bmm:workflows:generate-project-context:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
