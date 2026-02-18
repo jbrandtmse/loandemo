@@ -66,7 +66,7 @@ Method MyMethod(pInput As %String) As %Status
 - **Business Operations:** Extend `Ens.BusinessOperation`, implement `OnMessage(pRequest, Output pResponse)`
 - Define adapters explicitly: `Parameter ADAPTER = "EnsLib.HTTP.OutboundAdapter"`
 
-## Unit Testing (%UnitTest)
+## ObjectScript Unit Testing (%UnitTest)
 
 Extend `%UnitTest.TestCase`. **Use macros only, not methods:**
 ```objectscript
@@ -77,6 +77,8 @@ $$$AssertStatusOK(sc, "message")
 
 **WRONG:** `..AssertEquals`, `$$$AssertFalse`, `$$$AssertCondition`, `Do ..Assert...`
 
+ObjectScript Unit tests must return a %Status value, such as `QUIT $$$$OK`
+
 ## Critical Constraints
 
 1. **NO underscores** in class names, method names, or parameter names
@@ -85,6 +87,12 @@ $$$AssertStatusOK(sc, "message")
 4. **MultiDimensional properties:** No datatype - `Property Data [ MultiDimensional ];` not `Property Data As %String [ MultiDimensional ];`
 5. **Abstract methods:** Must have body with `{}` and return value, even if abstract
 6. **Python check:** Do NOT use `##class(%SYS.Python).IsAvailable()` - use `Import` then `GetPythonVersion`
+
+## IRIS File Sync & Compilation
+
+- **Auto-load:** ObjectScript `.cls` files are automatically loaded to the IRIS server when saved (folder trigger)
+- **Compile:** Use the MCP server tool to compile classes — files auto-load but still need explicit compilation
+- **Unit tests:** Use the MCP server tool to execute unit tests — cannot run tests via bash
 
 ## Angular Frontend
 
