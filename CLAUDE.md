@@ -99,3 +99,5 @@ ObjectScript Unit tests must return a %Status value, such as `QUIT $$$$OK`
 - Use `HttpClient`, configure API URL via `environment.ts`
 - TypeScript interfaces must match Swagger/OpenAPI JSON structure
 - Avoid `any` - use typed interfaces
+- Angular 21 is zoneless by default - it no longer includes zone.js. Without it,
+   async operations like HTTP responses don't trigger UI re-renders automatically. The spinner would show forever because Angular never knew the state had changed. Add ChangeDetectorRef.detectChanges() to manually trigger re-rendering after the API response arrives.
