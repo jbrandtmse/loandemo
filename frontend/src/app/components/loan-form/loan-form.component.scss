@@ -1,0 +1,81 @@
+.loan-form-container {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.loan-card {
+  width: 100%;
+  max-width: 520px;
+}
+
+.loan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.inline-spinner {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.error-text {
+  color: #b00020;
+  margin-top: 8px;
+}
+
+.result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.decision {
+  margin: 0;
+  font-weight: 600;
+}
+
+.decision-approved {
+  color: #2e7d32;
+}
+
+.decision-rejected {
+  color: #c62828;
+}
+
+.decision-review {
+  color: #ef6c00;
+}
+
+.decision-pending {
+  color: #616161;
+}
+
+.result-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0;
+}
+
+.result-details dt {
+  font-weight: 600;
+}
+
+.result-details dd {
+  margin: 0;
+}

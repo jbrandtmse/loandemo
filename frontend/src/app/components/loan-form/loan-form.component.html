@@ -1,0 +1,89 @@
+<div class="loan-form-container">
+  <mat-card class="loan-card">
+    <mat-card-header>
+      <mat-card-title>Smart Loan Broker</mat-card-title>
+      <mat-card-subtitle>Apply for a loan and get an instant decision</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <ng-container *ngIf="result() === null; else resultPanel">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="loan-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Applicant Name</mat-label>
+            <input matInput formControlName="applicantName" autocomplete="name" />
+            <mat-error *ngIf="form.controls['applicantName'].hasError('required')">
+              Name is required
+            </mat-error>
+            <mat-error *ngIf="form.controls['applicantName'].hasError('minlength')">
+              Name must be at least 2 characters
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Requested Amount (USD)</mat-label>
+            <input
+              matInput
+              type="number"
+              min="1"
+              step="1"
+              formControlName="requestedAmount"
+            />
+            <mat-error *ngIf="form.controls['requestedAmount'].hasError('required')">
+              Amount is required
+            </mat-error>
+            <mat-error *ngIf="form.controls['requestedAmount'].hasError('min')">
+              Amount must be greater than zero
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Tax ID</mat-label>
+            <input matInput formControlName="taxId" placeholder="123-45-6789" />
+            <mat-error *ngIf="form.controls['taxId'].hasError('required')">
+              Tax ID is required
+            </mat-error>
+            <mat-error *ngIf="form.controls['taxId'].hasError('pattern')">
+              Tax ID must be 4-15 digits/dashes
+            </mat-error>
+          </mat-form-field>
+
+          <div class="actions">
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="form.invalid || submitting()"
+            >
+              <ng-container *ngIf="!submitting()">Submit Application</ng-container>
+              <ng-container *ngIf="submitting()">
+                <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
+                Submitting...
+              </ng-container>
+            </button>
+          </div>
+
+          <p *ngIf="errorMessage() as err" class="error-text" role="alert">
+            {{ err }}
+          </p>
+        </form>
+      </ng-container>
+
+      <ng-template #resultPanel>
+        <div class="result-panel" *ngIf="result() as res">
+          <h2 class="decision" [ngClass]="decisionClass(res.decision)">
+            Decision: {{ res.decision }}
+          </h2>
+          <dl class="result-details">
+            <dt>Application ID</dt>
+            <dd>{{ res.applicationId }}</dd>
+            <dt>Credit Score</dt>
+            <dd>{{ res.creditScore }}</dd>
+          </dl>
+          <button mat-flat-button color="primary" type="button" (click)="reset()">
+            Submit another application
+          </button>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+</div>
