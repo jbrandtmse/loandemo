@@ -1,6 +1,6 @@
 # Story 1.3: Angular Frontend
 
-Status: review
+Status: done
 
 ## Story
 
@@ -166,3 +166,35 @@ claude-opus-4-7 (1M)
 - `frontend/src/app/components/loan-form/loan-form.component.ts` (new)
 - `frontend/src/app/components/loan-form/loan-form.component.html` (new)
 - `frontend/src/app/components/loan-form/loan-form.component.scss` (new)
+
+## Code Review Notes
+
+**Reviewer:** code-reviewer-1-3 (adversarial Senior Developer review)
+**Date:** 2026-04-28
+**Verdict:** PASS — 0 HIGH, 0 MEDIUM, 3 LOW. No auto-fixes required.
+
+### Adversarial checklist results
+
+1. **No `any`** — clean. `grep -rn ": any\|as any\|<any>" src/` returns zero hits in app/environments source.
+2. **API URL discipline** — `localhost:8880` appears only in `src/environments/environment.ts` and `environment.development.ts`. `apiUrl` is consumed only in `loan.service.ts`.
+3. **Reactive validators correct** — `applicantName` required + minLength(2), `requestedAmount` required + min(1) (numeric coercion via `type="number"` input), `taxId` required + pattern `/^[0-9-]{4,15}$/`. Submit disabled by `[disabled]="form.invalid || submitting()"`.
+4. **Spinner + button discipline** — inline `<mat-spinner diameter="20">` rendered while `submitting()`, button disabled during request, both cleared on success/error in the `subscribe` next/error callbacks.
+5. **Result panel completeness** — displays decision (with `decisionClass()` mapping all 4 values to `decision-approved` green / `decision-rejected` red / `decision-review` amber / `decision-pending` grey), creditScore, applicationId. "Submit another application" calls `reset()` which sets values, marks pristine + untouched, clears `result` and `errorMessage` signals.
+6. **Error handling** — both `HttpErrorResponse` and `status: 'error'` payloads surface to `MatSnackBar` with the server's `message` (with sensible fallback chain `err.error.message ?? err.message ?? "Request failed (status)"`). Form values are NOT reset on error — user can retry the same data.
+7. **Zoneless / change detection** — Angular 21.2 (zoneless). Component uses signals AND injects `ChangeDetectorRef`, calling `cdr.detectChanges()` after each async outcome (success, error, reset). Matches CLAUDE.md guidance verbatim.
+8. **Strict mode** — `tsconfig.json` has `strict: true`, plus `noImplicitOverride`, `noPropertyAccessFromIndexSignature`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `strictTemplates`, `strictInjectionParameters`. Build emits zero warnings.
+9. **HttpClient registration** — `provideHttpClient(withFetch())` in `app.config.ts`.
+10. **Standalone components** — `App` and `LoanFormComponent` are `standalone: true`; no NgModules anywhere.
+11. **Build sanity** — `npm run build` produced 446.53 kB initial bundle, 0 errors, 0 warnings, in 1.983s.
+12. **Smoke test** — `npx ng serve --port 4200` started cleanly; `curl http://localhost:4200/` returned HTTP 200 with valid index.html. Server stopped after test.
+13. **AC coverage** — AC1 through AC11 all demonstrably satisfied.
+
+### LOW-severity observations (not auto-fixed; informational)
+
+- **L1 (style):** Template uses legacy structural directives (`*ngIf`, `*ngClass`) rather than Angular 17+ new control flow (`@if`, `@for`). Functionally equivalent; modern projects prefer `@if`. Not in story acceptance criteria.
+- **L2 (test coverage):** No `*.spec.ts` for `LoanFormComponent` or `LoanService`. Story 1.3 ACs do not mandate component-level unit tests; Story 1.4 covers visualization-and-testing.
+- **L3 (a11y):** Result panel decision heading conveys outcome via color alone in the result detail block. The `<h2>` text already says "Decision: Approved/Rejected/...", so screen-reader users get the textual cue, but adding an explicit `aria-live` region for newly-rendered results would polish a11y. Not blocking.
+
+### Final status
+
+All HIGH/MEDIUM checks passed without modification. Build green. Smoke test green. Story status -> **done**.

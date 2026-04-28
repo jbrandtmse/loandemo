@@ -1,6 +1,6 @@
 # Story 1.2: Loan Processing Logic
 
-Status: review
+Status: done
 
 ## Story
 
@@ -131,3 +131,43 @@ claude-opus-4-7 (1M)
 - `src/LoanDemo/Message/LoanUpdateRequest.cls` (new)
 - `src/LoanDemo/Service/LoanService.cls` (modified — body replaced with SendRequestSync to LoanBroker)
 - `src/LoanDemo/Production.cls` (modified — added LoanBroker, CreditBureau, LoanPersistence items)
+
+## Code Review Notes
+
+Adversarial Senior Developer review performed on 2026-04-28 by `code-reviewer-1-2`.
+
+### Verification Summary
+
+- **Production state:** `Ens.Director.GetProductionStatus` returns `state=Running` with all 4 items enabled (LoanService, LoanBroker, CreditBureau, LoanPersistence). AC6 verified.
+- **DecisionLogic boundaries (AC1, AC8):** Direct `iris_execute_classmethod` invocations confirmed: 700→Manual Review, 500→Manual Review, 701→Approved, 499→Rejected, 750→Approved, 450→Rejected, 600→Manual Review. All seven boundary cases pass.
+- **CreditBureau formula (AC2):** Formula `($ZCRC(taxId, 7) # 551) + 300` mathematically yields [300, 850]. `$ZCRC` mode 7 returns 32-bit hash; modulo 551 distributes uniformly. Empirical sample of 10,000 random TaxIds: ~27% Approved, ~36% Rejected, ~37% Manual Review. `$ZCRC` is used (not `$ZHash`), per project memory. No hard-coded scores.
+- **LoanPersistence safety (AC3):** Both `SaveLoan` and `UpdateLoan` Try/Catch wrap `%Save()`, check `$$$ISERR(tSaveSC)` and propagate via `tSC` (not silently swallowed). `UpdateLoan` opens via `ApplicationIdIdxOpen(pRequest.ApplicationId)`, not `%OpenId`, correctly addressing the `%ID` ≠ `ApplicationId` divergence. `'$IsObject(tApp)` guard returns a useful error.
+- **BPL workflow (AC4, AC9):** SaveInitial → CreditCheck → EvaluateDecision → Update → BuildResponse/SetDecision/SetScore/SetStatus. Per-property `<assign>` into `callrequest` (not bulk OREF assign — fixed in dev per Debug Log). Fresh end-to-end POST yielded sessionId 923222 with the expected 8-message trace: Service→Broker (LoanRequest) → Broker→Persistence (LoanRequest) → Persistence→Broker (LoanResponse) → Broker→CreditBureau (CreditCheckRequest) → CreditBureau→Broker (CreditCheckResponse) → Broker→Persistence (LoanUpdateRequest) → Persistence→Broker (Ens.Response) → Broker→Service (LoanResponse). All 8 messages status=9.
+- **LoanService delegation (AC5):** `OnProcessInput` body is exactly `..SendRequestSync("LoanBroker", pInput, .pOutput)` inside a Try/Catch. No leftover Story 1.1 stub persistence. Signature unchanged. `%Status` pattern preserved with `Quit tSC` outside the Try.
+- **Production wiring (AC6):** Production.cls registers all 4 items. ConfigName `"LoanBroker"` matches what `LoanService` and the BPL `<call target="...">` look up.
+- **Naming conventions:** Grep confirmed no underscores in Method/ClassMethod/Property/Parameter/Class/Index identifiers across all reviewed files. p-prefix params (`pCreditScore`, `pRequest`, etc.) and t-prefix locals (`tSC`, `tApp`, `tSaveSC`) consistent. `%Status` returns with `Quit tSC` outside Try.
+- **Class size:** All classes well under 700 lines (largest: `LoanBroker.cls` at 76, `LoanPersistence.cls` at 72).
+- **Concurrency:** Sync calls (`async='0'`) ensure SaveInitial commits before Update opens the row — no race exposure.
+- **End-to-end smoke (AC7):** `POST /loandemo/api/loan/apply` with `{applicantName: "Reviewer Test", requestedAmount: 50000, taxId: "abc"}` returned HTTP 200 `{"status":"success","applicationId":291,"decision":"Approved","creditScore":737}`. SQL row 291 matches: `(291, "Reviewer Test", 737, "Approved")`. A second POST (taxId "trace-test-1") returned `{applicationId:292, decision:"Rejected", creditScore:392}` with the matching SQL row and full 8-message trace as above.
+
+### Findings
+
+| # | Severity | File:Line | Description | Resolution |
+|---|----------|-----------|-------------|------------|
+| 1 | LOW | `Rule/DecisionLogic.cls:11-26` | Try/Catch in `GetDecision` is dead code — the only operations are integer comparisons against an `%Integer` parameter and string assignments, none of which can throw. The Catch returns `"Manual Review"` defensively, which is reasonable, so the construct does no harm. | Not fixed. Auto-fix policy is HIGH/MEDIUM only; defensive Try/Catch matches the project pattern. |
+| 2 | LOW | `Operation/LoanPersistence.cls:7-33` | `SaveLoan` reuses `LoanDemo.Message.LoanResponse` (the outbound REST-facing contract) as the BPL `callresponse` for the initial save acknowledgment. A dedicated `LoanSaveResponse` (Ens.Response) would keep message ontology cleaner — the current shape forces SaveLoan to populate `Status`/`Decision`/`CreditScore` fields the BPL then overwrites at the final BuildResponse stage. | Not fixed. Working as designed; introducing a new message class would touch the BPL's request type and is out of scope for a non-defect refactor. |
+
+### Severity Counts
+
+- HIGH: 0
+- MEDIUM: 0
+- LOW: 2
+- Auto-resolved: 0 (LOW issues are stylistic and out of scope for the HIGH/MEDIUM auto-fix policy)
+
+### Acceptance Criteria Coverage
+
+All AC1–AC9 demonstrably satisfied. AC8 verified by direct class-method invocation at the 750/450/600 boundaries (and confirmed at the strict edges 700/701/500/499). AC9 verified by inspecting the live 8-message session 923222.
+
+### Final Status
+
+`done` — production running clean, all ACs green, no HIGH/MEDIUM defects.
