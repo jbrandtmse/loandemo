@@ -1,3 +1,4 @@
+/// Loan broker BPL orchestration. Regenerated 2026-04-28 to refresh Thread1.
 Class LoanDemo.Process.LoanBroker Extends Ens.BusinessProcessBPL
 {
 

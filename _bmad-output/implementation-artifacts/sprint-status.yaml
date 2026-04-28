@@ -15,8 +15,8 @@ project: "LoanDemo"
 
 development_status:
   # Epic 1: Smart Loan Broker Demo
-  epic-1: in-progress
+  epic-1: done
   1-1-iris-backend-foundation: done
   1-2-loan-processing-logic: done
   1-3-angular-frontend: done
-  1-4-visualization-and-testing: ready-for-dev
+  1-4-visualization-and-testing: done
