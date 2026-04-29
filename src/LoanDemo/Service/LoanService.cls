@@ -7,6 +7,10 @@ Method OnProcessInput(pInput As LoanDemo.Message.LoanRequest, Output pOutput As 
 {
     Set tSC = $$$OK
     Try {
+        // Ens.InboundAdapter polls every CallInterval seconds with no real input.
+        // Only forward to LoanBroker when invoked via the REST dispatcher with a real LoanRequest.
+        If '$IsObject($Get(pInput)) Quit
+        If 'pInput.%IsA("LoanDemo.Message.LoanRequest") Quit
         Set tSC = ..SendRequestSync("LoanBroker", pInput, .pOutput)
     }
     Catch ex {
