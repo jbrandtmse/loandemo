@@ -67,6 +67,16 @@ specialized AI agents.
 
 ### Installing BMAD
 
+> **This repo already ships with BMAD pre-installed** under [`_bmad/`](_bmad/),
+> with agent registrations for **Claude Code** in [`.claude/`](.claude/) plus
+> mirrored configs for [`.cline/`](.clinerules/) and [`.roo/`](.roo/). If you
+> use **Claude Code** there is **nothing to install** — the slash commands
+> (`/bmad-bmm-create-story`, `/bmad-bmm-dev-story`, `/bmad-bmm-code-review`,
+> `/bmad-epic-cycle`, etc.) are picked up automatically when you open the
+> project. You only need the steps below if you want to wire BMAD up for a
+> different agent (Cursor, Windsurf, plain CLI, etc.) or refresh to a newer
+> BMAD release.
+
 BMAD installs into a target project as a self-contained `_bmad/` directory plus
 configuration. The bundled installer is invoked from the BMAD repo:
 
